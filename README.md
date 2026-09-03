@@ -36,27 +36,6 @@ fingerprint.
 
 ## Benchmark
 
-Run the dependency-free benchmark harness in release mode:
-
-```sh
-cargo run --release --bin benchmark -- \
-  --items 100000 --queries 200000 --fpr-bits 10
-```
-
-It reports:
-
-- physical packed bytes per successfully inserted item;
-- empirical false-positive rate over absent keys;
-- nanoseconds per mixed lookup (50% present, 50% absent);
-- nanoseconds per insertion; and
-- the observed load at the first failed insertion for both cuckoo variants.
-
-Bloom filters have no hard maximum load, so that column is reported as `unbounded`. Timing
-results depend on the CPU, compiler, and system load. For useful results, close noisy
-applications and repeat runs.
-
-Example results for 100,000 items, 200,000 queries, and a target FPR of `2^-10`:
-
 ```text
 filter                     bytes/item false-positive    lookup ns    insert ns     max load
 Bloom                          1.8034       0.001015        81.59        93.61    unbounded
@@ -64,8 +43,22 @@ Cuckoo (2,4)                   2.1299       0.000820        61.19        58.74  
 Windowed cuckoo (2,2)          1.5958       0.000955        60.28       162.97       0.9575
 ```
 
-These values are one measured run and will vary by machine. In this run, the windowed
-filter used the least memory and had similar lookup speed, while insertion was slower.
+The windowed cuckoo filter used the least memory at 1.5958 bytes per item. That is about
+12% less memory than the Bloom filter and 25% less than the conventional cuckoo filter.
+Its 60.28-nanosecond lookup time was also the fastest result in this run.
+
+The memory savings come with slower writes. A windowed insertion took 162.97 nanoseconds,
+compared with 58.74 nanoseconds for the conventional cuckoo filter. Moving fingerprints
+through overlapping windows requires more work when slots are occupied.
+
+All three false-positive rates were close to the `2^-10` target of about 0.000977, or one
+false positive per 1,024 absent keys. Small differences between the three measurements
+are expected when testing a finite number of queries.
+
+The conventional cuckoo filter reached the highest load at 97.80% and had the fastest
+insertions, but used the most memory because its bucket count must be a power of two. The
+windowed filter reached 95.75% while allocating memory more closely to the requested size.
+The Bloom filter has no fixed maximum load, but it does not support deletion.
 
 ## Design notes
 
