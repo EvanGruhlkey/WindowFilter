@@ -4,11 +4,10 @@ WindowFilter is a dependency-free Rust library that checks whether a key was pro
 before without storing the full key. It can quickly reject missing keys before an expensive
 database, disk, or network lookup.
 
-```mermaid
-flowchart LR
-    K[Key] --> F{WindowFilter}
-    F -->|Definitely absent| S[Skip expensive lookup]
-    F -->|Probably present| D[Check the data source]
+```text
+                         +--> definitely absent --> skip expensive lookup
+key --> WindowFilter ---+
+                         +--> probably present  --> check the data source
 ```
 
 The project implements three filters from scratch and benchmarks their memory, accuracy,
