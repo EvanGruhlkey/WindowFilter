@@ -108,6 +108,34 @@ impl WindowedCuckooFilter {
         false
     }
 
+    pub fn len(&self) -> usize {
+        self.len
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
+    pub fn slot_count(&self) -> usize {
+        self.window_count + WINDOW_SIZE - 1
+    }
+
+    pub fn memory_bytes(&self) -> usize {
+        self.slots.bytes()
+    }
+
+    pub fn load_factor(&self) -> f64 {
+        self.len as f64 / self.slot_count() as f64
+    }
+
+    pub fn fingerprint_bits(&self) -> u8 {
+        self.fingerprint_bits
+    }
+
+    pub fn bits_per_slot(&self) -> u8 {
+        self.fingerprint_bits + 2
+    }
+
     fn insert_empty(&mut self, fingerprint: u32, first: usize, second: usize) -> bool {
         for (slot, choice, offset) in Self::coordinates(first, second) {
             if self.slots.get(slot) == 0 {
@@ -177,5 +205,44 @@ impl WindowedCuckooFilter {
         self.rng ^= self.rng >> 7;
         self.rng ^= self.rng << 17;
         self.rng
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn supports_insert_lookup_and_delete() {
+        let mut filter = WindowedCuckooFilter::new(1_000, 10);
+        assert!(filter.insert("evan"));
+        assert!(filter.contains("evan"));
+        assert!(!filter.contains("bob"));
+        assert!(filter.delete("evan"));
+        assert!(!filter.contains("evan"));
+        assert!(filter.is_empty());
+    }
+
+    #[test]
+    fn retains_keys_at_the_design_load() {
+        let mut filter = WindowedCuckooFilter::new(2_000, 12).with_max_kicks(2_000);
+        let mut inserted = Vec::new();
+        for value in 0..2_000 {
+            let key = format!("key-{value}");
+            assert!(filter.insert(&key), "insertion failed at {value}");
+            inserted.push(key);
+        }
+        assert!(inserted.iter().all(|key| filter.contains(key)));
+        assert_eq!(filter.len(), 2_000);
+        assert_eq!(filter.fingerprint_bits(), 12);
+        assert_eq!(filter.bits_per_slot(), 14);
+        assert!(filter.load_factor() >= 0.939);
+    }
+
+    #[test]
+    fn uses_flexible_non_power_of_two_storage() {
+        let filter = WindowedCuckooFilter::new(1_000, 10);
+        assert!(!filter.slot_count().is_power_of_two());
+        assert_eq!(filter.memory_bytes(), 1_600);
     }
 }
