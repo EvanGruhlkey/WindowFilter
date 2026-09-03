@@ -9,7 +9,9 @@ pub(crate) struct PackedSlots {
 impl PackedSlots {
     pub(crate) fn new(len: usize, width: u8) -> Self {
         assert!((1..=32).contains(&width));
-        let bit_len = len.checked_mul(width as usize).expect("slot allocation overflow");
+        let bit_len = len
+            .checked_mul(width as usize)
+            .expect("slot allocation overflow");
         Self {
             words: vec![0; bit_len.div_ceil(64)],
             len,

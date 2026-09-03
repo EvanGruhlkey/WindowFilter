@@ -29,4 +29,3 @@ mod tests {
         assert_ne!(hash("evan", 7), hash("bob", 7));
     }
 }
-
