@@ -30,7 +30,7 @@ The second constructor argument is `k`, giving a target false-positive rate of `
 are rolled back, preserving every key already in the filter.
 
 Bloom filters cannot safely delete individual keys because their bits are shared. The two
-cuckoo filters support deletion, but—as with cuckoo filters generally—call `delete` only
+cuckoo filters support deletion, but, as with cuckoo filters generally, call `delete` only
 for keys known to have been inserted. Deleting a false-positive key can remove a colliding
 fingerprint.
 
@@ -54,6 +54,18 @@ It reports:
 Bloom filters have no hard maximum load, so that column is reported as `unbounded`. Timing
 results depend on the CPU, compiler, and system load. For useful results, close noisy
 applications and repeat runs.
+
+Example results for 100,000 items, 200,000 queries, and a target FPR of `2^-10`:
+
+```text
+filter                     bytes/item false-positive    lookup ns    insert ns     max load
+Bloom                          1.8034       0.001015        81.59        93.61    unbounded
+Cuckoo (2,4)                   2.1299       0.000820        61.19        58.74       0.9780
+Windowed cuckoo (2,2)          1.5958       0.000955        60.28       162.97       0.9575
+```
+
+These values are one measured run and will vary by machine. In this run, the windowed
+filter used the least memory and had similar lookup speed, while insertion was slower.
 
 ## Design notes
 
