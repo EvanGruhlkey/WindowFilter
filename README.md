@@ -74,4 +74,3 @@ Filters*](https://arxiv.org/abs/2505.05847), arXiv:2505.05847.
 ## License
 
 MIT
-
