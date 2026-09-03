@@ -1,0 +1,19 @@
+[package]
+name = "windowfilter"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "Bloom, cuckoo, and windowed cuckoo filters with reproducible benchmarks"
+
+[lib]
+name = "windowfilter"
+path = "src/lib.rs"
+
+[[bin]]
+name = "benchmark"
+path = "src/bin/benchmark.rs"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+
