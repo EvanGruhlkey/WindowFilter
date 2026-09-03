@@ -245,4 +245,20 @@ mod tests {
         assert!(!filter.slot_count().is_power_of_two());
         assert_eq!(filter.memory_bytes(), 1_600);
     }
+
+    #[test]
+    fn failed_insert_rolls_back_relocations() {
+        let mut filter = WindowedCuckooFilter::new(1, 20).with_max_kicks(16);
+        let mut inserted = Vec::new();
+        for value in 0..100 {
+            let key = format!("tiny-{value}");
+            if filter.insert(&key) {
+                inserted.push(key);
+            } else {
+                assert!(inserted.iter().all(|key| filter.contains(key)));
+                return;
+            }
+        }
+        panic!("tiny filter never filled");
+    }
 }

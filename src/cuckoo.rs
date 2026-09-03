@@ -195,4 +195,20 @@ mod tests {
         assert_eq!(filter.len(), 2_000);
         assert_eq!(filter.fingerprint_bits(), 15);
     }
+
+    #[test]
+    fn failed_insert_rolls_back_relocations() {
+        let mut filter = CuckooFilter::new(1, 20).with_max_kicks(16);
+        let mut inserted = Vec::new();
+        for value in 0..100 {
+            let key = format!("tiny-{value}");
+            if filter.insert(&key) {
+                inserted.push(key);
+            } else {
+                assert!(inserted.iter().all(|key| filter.contains(key)));
+                return;
+            }
+        }
+        panic!("tiny filter never filled");
+    }
 }
