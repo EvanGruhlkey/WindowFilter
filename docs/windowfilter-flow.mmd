@@ -1,0 +1,11 @@
+flowchart LR
+    K["Key"] --> F{"WindowFilter"}
+    F -->|"Definitely absent"| S["Skip expensive lookup"]
+    F -->|"Probably present"| D["Check the data source"]
+
+    classDef input fill:#eaf2ff,stroke:#4a6fa5,color:#172b4d,stroke-width:2px
+    classDef filter fill:#e8f7f0,stroke:#23855d,color:#123b2a,stroke-width:2px
+    classDef action fill:#fff4db,stroke:#b7791f,color:#4a2c00,stroke-width:2px
+    class K input
+    class F filter
+    class S,D action
