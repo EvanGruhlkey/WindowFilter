@@ -1,38 +1,30 @@
 # WindowFilter
 
-WindowFilter is a dependency-free Rust library for testing whether a key was probably
-seen before. It stores compact fingerprints or bits instead of complete keys, so it can
-reject missing keys using much less memory than an exact set. Present keys are never
-missed, but absent keys have a small, configurable chance of being reported as present.
+WindowFilter is a dependency-free Rust library that checks whether a key was probably seen
+before without storing the full key. It can quickly reject missing keys before an expensive
+database, disk, or network lookup.
 
-## Motivation
+```mermaid
+flowchart LR
+    K[Key] --> F{WindowFilter}
+    F -->|Definitely absent| S[Skip expensive lookup]
+    F -->|Probably present| D[Check the data source]
+```
 
-Applications often need to check a large collection before doing something expensive,
-such as reading from disk, querying a database, or processing a duplicate item. An exact
-set can answer that question, but storing every complete key becomes costly at large
-scales. An approximate membership filter provides a useful first check: a negative answer
-is certain, while a positive answer can be confirmed by the underlying data source.
-
-This project builds three filters from scratch to make their memory and performance
-tradeoffs easy to compare. Its main goal is to explore how the overlapping-window layout
-from *Smaller and More Flexible Cuckoo Filters* reduces space while preserving deletion
-and fast lookups. The implementation uses bit-packed storage and includes the same
-benchmark harness for all three designs, making the cost of each layout directly visible.
+The project implements three filters from scratch and benchmarks their memory, accuracy,
+lookup speed, insertion speed, and maximum load.
 
 ## Implementations
 
-- `BloomFilter` sets several positions in a bit array. It is compact and simple, but it
-  cannot safely delete individual keys.
-- `CuckooFilter` stores fingerprints in two four-slot buckets. It supports deletion and
-  fast relocation, but its power-of-two bucket count can allocate more memory than needed.
-- `WindowedCuckooFilter` stores fingerprints in two overlapping two-slot windows. It uses
-  arbitrary window counts and fewer bits per item, trading slower insertion for lower
-  memory use.
+- `BloomFilter`: simple and compact, but cannot delete individual keys.
+- `CuckooFilter`: uses two four-slot buckets and supports deletion.
+- `WindowedCuckooFilter`: uses overlapping two-slot windows to save memory while
+  supporting deletion.
 
-The windowed filter stores a `k`-bit fingerprint, one bit identifying the selected window,
-and one bit identifying the position inside that window. Signed offsets let it recover a
-fingerprint's alternative window without requiring a power-of-two table size. All three
-filters use compact, bit-packed storage.
+The windowed design follows [*Smaller and More Flexible Cuckoo
+Filters*](https://arxiv.org/abs/2505.05847). Each entry contains a `k`-bit fingerprint,
+a window-choice bit, and a position bit. Signed offsets allow any number of windows, and
+bit packing prevents unused padding between entries.
 
 ## Usage
 
