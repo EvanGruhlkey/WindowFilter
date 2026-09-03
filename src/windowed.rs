@@ -2,7 +2,7 @@ use crate::hash::{hash, mix};
 use crate::packed::PackedSlots;
 
 const WINDOW_SIZE: usize = 2;
-const DEFAULT_MAX_KICKS: usize = 500;
+const DEFAULT_MAX_KICKS: usize = 10_000;
 
 /// A `(2, 2)` cuckoo filter whose adjacent windows overlap by one slot.
 #[derive(Clone, Debug)]

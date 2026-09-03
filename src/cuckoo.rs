@@ -2,7 +2,7 @@ use crate::hash::{hash, mix};
 use crate::packed::PackedSlots;
 
 const BUCKET_SIZE: usize = 4;
-const DEFAULT_MAX_KICKS: usize = 500;
+const DEFAULT_MAX_KICKS: usize = 10_000;
 
 /// A standard `(2, 4)` bucketed cuckoo filter.
 #[derive(Clone, Debug)]
